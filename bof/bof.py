@@ -13,7 +13,7 @@ print 'Payload: ', payload
 # send payload
 print 'Sending payload...'
 conn.sendline(payload)
-print 'Sending ls...'
+print 'Sending cat flag...'
 conn.sendline('cat flag')
 
 # get output
