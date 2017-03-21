@@ -3,7 +3,8 @@
 In this program,
 1. The method func is called with a key of 0xdeadbeef
 2. User input is then used to fill a char array via gets()
-3. The key is then compared with 0xcafebabe, if it matches, we get a shell
+3. The key is then compared with 0xcafebabe, if it matches, we get a shell :)
+
 We want to overwrite the value of the key to 0xcafebabe, so that the comparison succeeds. This can be done by supplying more than 32 characters when gets() read in input.
 
 We run the program with gdb to observe the stack value
@@ -84,7 +85,7 @@ conn.sendline('ls')
 # get output
 print conn.recvline()
 ```
-The ouput of ls shows us only the executable bof exist in the directory, where is the flag :( With ls -al instead, we see that the flag does exist. Let's change our ls to cat flag
+The ouput of ```ls``` shows us only the executable bof exist in the directory, where is the flag :( With ```ls -al``` instead, we see that the flag does exist. Let's change our ```ls``` to ```cat flag```
 
 ```
 $ ./bof.py
