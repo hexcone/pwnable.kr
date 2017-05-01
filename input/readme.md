@@ -9,7 +9,7 @@ flag  input  input.c
 Looking at input.c, the flow of the program is as follows
 1. To clear stage 1, we must pass in 100 arguments, argv['A'] must equates "\x00" and argv['B'] must equates "\x20\x0a\x0d". argv['A'] and argv['B'] are argv[65] and argv[66] respectively.
 2. To clear stage 2, the 4 bytes read from fd=0 must be "\x00\x0a\x00\xff" and 4 bytes read from fd=2 must be "\x00\x0a\x02\xff"
-3. 
+3. To clear stage 3, there must be an environment variable of '\xde\xad\xbe\xef'='\xca\xfe\xba\xbe'
 4. 
 
 For stage 1, we form our cmd and arguments respectively as such. (The cmd below is an example, doesn't work, run the python script instead)
@@ -22,4 +22,12 @@ For stage 2, to write to fd=0, we can peform a sendline(). To write to fd=2, the
 sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin)
 ...
 sh.sendline('\x00\x0a\x00\xff\x00\x0a\x02\xff')
+```
+
+For stage 3, we set the necessary values in a dictionary, and pass it as an argument when executing the program
+```
+env = {}
+env['\xde\xad\xbe\xef'] = '\xca\xfe\xba\xbe'
+...
+sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env)
 ```

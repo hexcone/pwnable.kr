@@ -14,12 +14,15 @@ for num in range(1, 100):
         cmd.append(str(num));
 print '\ncmd: ', cmd
 
+env = {}
+env['\xde\xad\xbe\xef'] = '\xca\xfe\xba\xbe'
+
 # open connection
 s = ssh(host='pwnable.kr',
     user='input2',
     port=2222,
     password='guest')
-sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin)
+sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env)
 
 # stage 1
 print sh.recvline()
@@ -29,4 +32,7 @@ print sh.recvline()
 
 # stage 2
 sh.sendline('\x00\x0a\x00\xff\x00\x0a\x02\xff')
+print sh.recvline()
+
+# stage 3
 print sh.recvline()
