@@ -10,7 +10,8 @@ Looking at input.c, the flow of the program is as follows
 1. To clear stage 1, we must pass in 100 arguments, argv['A'] must equates "\x00" and argv['B'] must equates "\x20\x0a\x0d". argv['A'] and argv['B'] are argv[65] and argv[66] respectively.
 2. To clear stage 2, the 4 bytes read from fd=0 must be "\x00\x0a\x00\xff" and 4 bytes read from fd=2 must be "\x00\x0a\x02\xff"
 3. To clear stage 3, there must be an environment variable of '\xde\xad\xbe\xef'='\xca\xfe\xba\xbe'
-4. 
+4. To clear stage 4, there should be a file named '\x0a' in the local directory, and it should contains '\x00\x00\x00\x00'.
+5. 
 
 For stage 1, we form our cmd and arguments respectively as such. (The cmd below is an example, doesn't work, run the python script instead)
 ```
@@ -30,4 +31,18 @@ env = {}
 env['\xde\xad\xbe\xef'] = '\xca\xfe\xba\xbe'
 ...
 sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env)
+```
+
+For stage 4, we cannot create a file in the /home/input2/ directory that we are originally in, but we can do so in /tmp/. Hence, when we connect via ssh, we change directory to /tmp/ and create the required file, before calling the input program via its full path.
+```
+create_file = 'cd /tmp; echo -ne "\x00\x00\x00\x00" > "\n";'
+s.run_to_end(create_file)
+sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env, cwd='/tmp')
+```
+If the above doesn't work, we can ssh in manually to create the required file on /tmp
+```
+echo -ne "\x00\x00\x00\x00" > "
+";
+cat "
+";
 ```
