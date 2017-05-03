@@ -11,7 +11,7 @@ Looking at input.c, the flow of the program is as follows
 2. To clear stage 2, the 4 bytes read from fd=0 must be "\x00\x0a\x00\xff" and 4 bytes read from fd=2 must be "\x00\x0a\x02\xff"
 3. To clear stage 3, there must be an environment variable of '\xde\xad\xbe\xef'='\xca\xfe\xba\xbe'
 4. To clear stage 4, there should be a file named '\x0a' in the local directory, and it should contains '\x00\x00\x00\x00'.
-5. 
+5. For stage 5, it starts a socket with argv['C'], which is argv[67], as the port number. It then blocks and wait to accept a connection from a client. The client will then have to send 4 bytes of '\xde\xad\xbe\xef'.
 
 For stage 1, we form our cmd and arguments respectively as such. (The cmd below is an example, doesn't work, run the python script instead)
 ```
@@ -39,10 +39,56 @@ create_file = 'cd /tmp; echo -ne "\x00\x00\x00\x00" > "\n";'
 s.run_to_end(create_file)
 sh = s.process(argv=cmd, stdin=sys.stdin, stderr=sys.stdin, env=env, cwd='/tmp')
 ```
-If the above doesn't work, we can ssh in manually to create the required file on /tmp
+If the above doesn't work, (lol actually it doesn't), we can ssh in manually to create the required file on /tmp
 ```
+cd /tmp;
 echo -ne "\x00\x00\x00\x00" > "
 ";
 cat "
 ";
+```
+
+Stage 5, I attempted to connect from our python script as such. However, I received a 111 Connection refused.
+```
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+result = -1
+while (result != 0):
+    result = client.connect_ex((socket.gethostbyname('pwnable.kr'), socket_port))
+    print result
+client.send('\xde\xad\xbe\xef')
+```
+Hence, let's attempt to connect to the socket locally instead.
+```
+send_to_socket = 'echo -ne "\xde\xad\xbe\xef" | nc localhost ' + str(socket_port)
+...
+s.run_to_end(send_to_socket)
+```
+
+We have cleared all 5 stages, however, since our program runs in a separate directory from the flag file... it is unable to print out the flag lol. Below we create a symbolic link to the actual flag. If it doesn't work.. ssh in to run manually lol
+```
+cd /tmp
+ln -sf /home/input2/flag /tmp/flag
+```
+
+The link flag now exist, but our program get a permission denied as it try to follow it. Instead of /tmp, we move everything to /tmp/rawr to run. Creating the file in stage 4 in /tmp/rawr as well.
+```
+$ ./input.py
+Welcome to pwnable.kr
+
+Let's see if you know how to give input to program
+
+Just give me correct inputs then you will get the flag :)
+
+Stage 1 clear!
+
+Stage 2 clear!
+
+Stage 3 clear!
+
+Stage 4 clear!
+
+Stage 5 clear!
+
+Mommy! I learned how to pass various input in Linux :)
+
 ```
